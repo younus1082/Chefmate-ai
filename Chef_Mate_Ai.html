@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChefMate AI - Smart Cooking Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-green: #4ECDC4;
+            --dark-green: #45B7AA;
+            --warm-orange: #FF6B6B;
+            --bright-yellow: #FFD93D;
+            --light-green: #E8F8F5;
+            --dark-text: #2C3E50;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 100%);
+        }
+        
+        .chat-bubble-user {
+            background: var(--warm-orange);
+            color: white;
+        }
+        
+        .chat-bubble-ai {
+            background: var(--light-green);
+            color: var(--dark-text);
+        }
+        
+        .ingredient-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--primary-green);
+        }
+        
+        .ingredient-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .recipe-card {
+            transition: all 0.3s ease;
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+        }
+        
+        .recipe-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .floating-button {
+            background: linear-gradient(135deg, var(--warm-orange) 0%, #FF5722 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .floating-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+        }
+        
+        .expiry-warning {
+            background: #FEF3CD;
+            border-left: 4px solid var(--bright-yellow);
+        }
+        
+        .expiry-danger {
+            background: #FECACA;
+            border-left: 4px solid var(--warm-orange);
+        }
+        
+        .tab-active {
+            background: var(--primary-green);
+            color: white;
+        }
+        
+        .tab-inactive {
+            background: #f1f5f9;
+            color: var(--dark-text);
+        }
+        
+        .slide-in {
+            animation: slideIn 0.3s ease-in-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .chat-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .chat-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .chat-container::-webkit-scrollbar-thumb {
+            background: var(--primary-green);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- Header -->
+    <header class="gradient-bg text-white p-4 shadow-lg">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-utensils text-2xl"></i>
+                <h1 class="text-2xl font-bold">ChefMate AI</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm opacity-90">Your Smart Cooking Assistant</span>
+                <div class="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user text-sm"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-white border-b shadow-sm sticky top-0 z-10">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex space-x-1 py-2">
+                <button onclick="showTab('dashboard')" class="tab-button tab-active px-4 py-2 rounded-lg font-medium transition-all" id="dashboard-tab">
+                    <i class="fas fa-home mr-2"></i>Dashboard
+                </button>
+                <button onclick="showTab('chat')" class="tab-button tab-inactive px-4 py-2 rounded-lg font-medium transition-all" id="chat-tab">
+                    <i class="fas fa-comments mr-2"></i>AI Assistant
+                </button>
+                <button onclick="showTab('inventory')" class="tab-button tab-inactive px-4 py-2 rounded-lg font-medium transition-all" id="inventory-tab">
+                    <i class="fas fa-boxes mr-2"></i>My Inventory
+                </button>
+                <button onclick="showTab('recipes')" class="tab-button tab-inactive px-4 py-2 rounded-lg font-medium transition-all" id="recipes-tab">
+                    <i class="fas fa-book-open mr-2"></i>Recipes
+                </button>
+                <button onclick="showTab('grocery')" class="tab-button tab-inactive px-4 py-2 rounded-lg font-medium transition-all" id="grocery-tab">
+                    <i class="fas fa-shopping-cart mr-2"></i>Grocery List
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 py-6">
+        
+        <!-- Dashboard Tab -->
+        <div id="dashboard-content" class="tab-content">
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Quick Stats -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800">Inventory Items</h3>
+                            <p class="text-3xl font-bold" style="color: var(--primary-green);" id="inventory-count">0</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: var(--light-green);">
+                            <i class="fas fa-boxes text-xl" style="color: var(--primary-green);"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800">Available Recipes</h3>
+                            <p class="text-3xl font-bold" style="color: var(--warm-orange);" id="recipe-count">0</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: #FEF3E2;">
+                            <i class="fas fa-utensils text-xl" style="color: var(--warm-orange);"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800">Grocery Items</h3>
+                            <p class="text-3xl font-bold" style="color: var(--bright-yellow);" id="grocery-count">0</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: #FFFBEB;">
+                            <i class="fas fa-shopping-cart text-xl" style="color: var(--bright-yellow);"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity & Quick Actions -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Expiring Soon -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-clock mr-2" style="color: var(--warm-orange);"></i>
+                        Expiring Soon
+                    </h3>
+                    <div id="expiring-items" class="space-y-3">
+                        <p class="text-gray-500 text-sm">No items expiring soon</p>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-bolt mr-2" style="color: var(--primary-green);"></i>
+                        Quick Actions
+                    </h3>
+                    <div class="space-y-3">
+                        <button onclick="showTab('chat')" class="w-full text-left p-3 rounded-lg border border-gray-200 hover:border-gray-300 transition-all">
+                            <i class="fas fa-comments mr-3" style="color: var(--primary-green);"></i>
+                            Ask "What's for dinner?"
+                        </button>
+                        <button onclick="showTab('inventory')" class="w-full text-left p-3 rounded-lg border border-gray-200 hover:border-gray-300 transition-all">
+                            <i class="fas fa-plus mr-3" style="color: var(--warm-orange);"></i>
+                            Add ingredients to inventory
+                        </button>
+                        <button onclick="suggestRecipesFromInventory()" class="w-full text-left p-3 rounded-lg border border-gray-200 hover:border-gray-300 transition-all">
+                            <i class="fas fa-magic mr-3" style="color: var(--bright-yellow);"></i>
+                            Get recipe suggestions
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Tab -->
+        <div id="chat-content" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="gradient-bg p-4">
+                    <h2 class="text-xl font-bold text-white">
+                        <i class="fas fa-robot mr-2"></i>
+                        AI Cooking Assistant
+                    </h2>
+                    <p class="text-white opacity-90 text-sm">Ask me anything about cooking, recipes, or meal planning!</p>
+                </div>
+                
+                <div class="chat-container p-4" id="chat-messages">
+                    <div class="chat-bubble-ai p-4 rounded-lg mb-4 max-w-xs slide-in">
+                        <p class="text-sm">👋 Hi! I'm your AI cooking assistant. Try asking me "What should I cook tonight?" or "What can I make with chicken and rice?"</p>
+                    </div>
+                </div>
+                
+                <div class="border-t p-4">
+                    <div class="flex space-x-3">
+                        <input type="text" id="chat-input" placeholder="Ask me anything about cooking..." 
+                               class="flex-1 p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none">
+                        <button onclick="sendMessage()" class="floating-button px-6 py-3 text-white rounded-lg font-medium">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <button onclick="quickMessage('What should I cook tonight?')" class="text-xs px-3 py-1 bg-gray-100 rounded-full hover:bg-gray-200 transition-all">
+                            What should I cook tonight?
+                        </button>
+                        <button onclick="quickMessage('I have 30 minutes to cook')" class="text-xs px-3 py-1 bg-gray-100 rounded-full hover:bg-gray-200 transition-all">
+                            I have 30 minutes to cook
+                        </button>
+                        <button onclick="quickMessage('Healthy meal ideas')" class="text-xs px-3 py-1 bg-gray-100 rounded-full hover:bg-gray-200 transition-all">
+                            Healthy meal ideas
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Tab -->
+        <div id="inventory-content" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-boxes mr-2" style="color: var(--primary-green);"></i>
+                    My Inventory
+                </h2>
+                
+                <!-- Add Ingredient Form -->
+                <div class="grid md:grid-cols-4 gap-4 mb-6">
+                    <input type="text" id="ingredient-name" placeholder="Ingredient name" 
+                           class="p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none">
+                    <input type="number" id="ingredient-quantity" placeholder="Quantity" 
+                           class="p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none">
+                    <input type="date" id="ingredient-expiry" 
+                           class="p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none">
+                    <button onclick="addIngredient()" class="floating-button px-4 py-3 text-white rounded-lg font-medium">
+                        <i class="fas fa-plus mr-2"></i>Add Item
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Inventory Items -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="inventory-items">
+                <div class="text-center py-12 col-span-full">
+                    <i class="fas fa-box-open text-6xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-500">Your inventory is empty. Start by adding some ingredients!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recipes Tab -->
+        <div id="recipes-content" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <h2 class="text-xl font-bold text-gray-800">
+                        <i class="fas fa-book-open mr-2" style="color: var(--warm-orange);"></i>
+                        Recipe Suggestions
+                    </h2>
+                    <div class="flex gap-3">
+                        <select id="recipe-filter" class="p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none">
+                            <option value="all">All Recipes</option>
+                            <option value="available">Can Make Now</option>
+                            <option value="quick">Quick (≤30 min)</option>
+                            <option value="healthy">Healthy</option>
+                        </select>
+                        <button onclick="suggestRecipesFromInventory()" class="floating-button px-4 py-2 text-white rounded-lg font-medium">
+                            <i class="fas fa-magic mr-2"></i>Suggest from Inventory
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="recipes-list">
+                <div class="text-center py-12 col-span-full">
+                    <i class="fas fa-utensils text-6xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-500">Click "Suggest from Inventory" to see recipe recommendations!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grocery Tab -->
+        <div id="grocery-content" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold text-gray-800">
+                        <i class="fas fa-shopping-cart mr-2" style="color: var(--bright-yellow);"></i>
+                        Grocery List
+                    </h2>
+                    <button onclick="clearGroceryList()" class="text-red-500 hover:text-red-700 text-sm font-medium">
+                        <i class="fas fa-trash mr-1"></i>Clear All
+                    </button>
+                </div>
+                <p class="text-gray-600 text-sm mt-2">Items automatically added when you're missing ingredients for recipes</p>
+            </div>
+            
+            <div class="space-y-3" id="grocery-items">
+                <div class="text-center py-12">
+                    <i class="fas fa-shopping-bag text-6xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-500">Your grocery list is empty. Items will be added automatically when you select recipes!</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Recipe Detail Modal -->
+    <div id="recipe-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-2xl w-full max-h-screen overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-2xl font-bold text-gray-800" id="modal-recipe-title"></h3>
+                    <button onclick="closeRecipeModal()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div id="modal-recipe-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let inventory = JSON.parse(localStorage.getItem('inventory') || '[]');
+        let groceryList = JSON.parse(localStorage.getItem('groceryList') || '[]');
+        let chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '[]');
+        
+        // Sample recipe database
+        const recipeDatabase = [
+            {
+                id: 1,
+                name: "Chicken Fried Rice",
+                ingredients: ["chicken breast", "rice", "eggs", "soy sauce", "vegetables", "garlic", "onion"],
+                time: 25,
+                difficulty: "Easy",
+                instructions: [
+                    "Cook rice according to package instructions",
+                    "Cut chicken into small pieces and season with salt and pepper",
+                    "Heat oil in a large pan or wok over medium-high heat",
+                    "Cook chicken until golden brown, about 5-7 minutes",
+                    "Add garlic and onion, cook for 2 minutes",
+                    "Add vegetables and cook for 3-4 minutes",
+                    "Push ingredients to one side, scramble eggs on the other side",
+                    "Add cooked rice and soy sauce, mix everything together",
+                    "Cook for 2-3 more minutes until heated through"
+                ],
+                category: "quick",
+                healthy: false
+            },
+            {
+                id: 2,
+                name: "Vegetable Stir Fry",
+                ingredients: ["broccoli", "bell peppers", "carrots", "soy sauce", "garlic", "ginger", "sesame oil"],
+                time: 15,
+                difficulty: "Easy",
+                instructions: [
+                    "Cut all vegetables into bite-sized pieces",
+                    "Heat sesame oil in a wok over high heat",
+                    "Add garlic and ginger, stir-fry for 30 seconds",
+                    "Add harder vegetables first (carrots, broccoli)",
+                    "Add bell peppers and stir-fry for 2-3 minutes",
+                    "Add soy sauce and toss to combine",
+                    "Cook until vegetables are tender-crisp",
+                    "Serve immediately over rice"
+                ],
+                category: "healthy",
+                healthy: true
+            },
+            {
+                id: 3,
+                name: "Pasta Carbonara",
+                ingredients: ["pasta", "eggs", "bacon", "parmesan cheese", "black pepper", "garlic"],
+                time: 20,
+                difficulty: "Medium",
+                instructions: [
+                    "Cook pasta according to package instructions",
+                    "While pasta cooks, fry bacon until crispy",
+                    "Beat eggs with grated parmesan and black pepper",
+                    "Add minced garlic to the bacon for 1 minute",
+                    "Drain pasta, reserving 1 cup pasta water",
+                    "Add hot pasta to the bacon pan",
+                    "Remove from heat and quickly stir in egg mixture",
+                    "Add pasta water gradually until creamy",
+                    "Serve immediately with extra parmesan"
+                ],
+                category: "quick",
+                healthy: false
+            },
+            {
+                id: 4,
+                name: "Quinoa Buddha Bowl",
+                ingredients: ["quinoa", "chickpeas", "avocado", "cucumber", "cherry tomatoes", "spinach", "tahini", "lemon"],
+                time: 30,
+                difficulty: "Easy",
+                instructions: [
+                    "Cook quinoa according to package instructions",
+                    "Drain and rinse chickpeas, then roast with olive oil and spices",
+                    "Wash and chop all vegetables",
+                    "Make tahini dressing with tahini, lemon juice, and water",
+                    "Arrange quinoa in bowls as the base",
+                    "Top with roasted chickpeas and fresh vegetables",
+                    "Drizzle with tahini dressing",
+                    "Garnish with fresh herbs if desired"
+                ],
+                category: "healthy",
+                healthy: true
+            },
+            {
+                id: 5,
+                name: "Beef Tacos",
+                ingredients: ["ground beef", "taco shells", "lettuce", "tomatoes", "cheese", "onion", "cumin", "chili powder"],
+                time: 20,
+                difficulty: "Easy",
+                instructions: [
+                    "Brown ground beef in a large skillet",
+                    "Add diced onion and cook until soft",
+                    "Season with cumin, chili powder, salt, and pepper",
+                    "Warm taco shells according to package directions",
+                    "Chop lettuce, tomatoes, and any other toppings",
+                    "Fill taco shells with seasoned beef",
+                    "Top with lettuce, tomatoes, cheese, and onion",
+                    "Serve with salsa and sour cream"
+                ],
+                category: "quick",
+                healthy: false
+            }
+        ];
+        
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStats();
+            updateExpiringItems();
+            loadChatHistory();
+            document.getElementById('chat-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') sendMessage();
+            });
+            document.getElementById('recipe-filter').addEventListener('change', filterRecipes);
+        });
+        
+        // Tab management
+        function showTab(tabName) {
+            // Hide all content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('tab-active');
+                button.classList.add('tab-inactive');
+            });
+            
+            // Show selected content and activate tab
+            document.getElementById(tabName + '-content').classList.remove('hidden');
+            document.getElementById(tabName + '-tab').classList.add('tab-active');
+            document.getElementById(tabName + '-tab').classList.remove('tab-inactive');
+            
+            // Special actions for certain tabs
+            if (tabName === 'inventory') {
+                displayInventory();
+            } else if (tabName === 'recipes') {
+                displayRecipes();
+            } else if (tabName === 'grocery') {
+                displayGroceryList();
+            }
+        }
+        
+        // Inventory management
+        function addIngredient() {
+            const name = document.getElementById('ingredient-name').value.trim();
+            const quantity = document.getElementById('ingredient-quantity').value;
+            const expiry = document.getElementById('ingredient-expiry').value;
+            
+            if (!name) {
+                alert('Please enter an ingredient name');
+                return;
+            }
+            
+            const ingredient = {
+                id: Date.now(),
+                name: name.toLowerCase(),
+                quantity: quantity || 1,
+                expiry: expiry || null,
+                added: new Date().toISOString()
+            };
+            
+            inventory.push(ingredient);
+            localStorage.setItem('inventory', JSON.stringify(inventory));
+            
+            // Clear form
+            document.getElementById('ingredient-name').value = '';
+            document.getElementById('ingredient-quantity').value = '';
+            document.getElementById('ingredient-expiry').value = '';
+            
+            displayInventory();
+            updateStats();
+            updateExpiringItems();
+        }
+        
+        function removeIngredient(id) {
+            inventory = inventory.filter(item => item.id !== id);
+            localStorage.setItem('inventory', JSON.stringify(inventory));
+            displayInventory();
+            updateStats();
+            updateExpiringItems();
+        }
+        
+        function displayInventory() {
+            const container = document.getElementById('inventory-items');
+            if (inventory.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 col-span-full">
+                        <i class="fas fa-box-open text-6xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500">Your inventory is empty. Start by adding some ingredients!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = inventory.map(item => {
+                const daysUntilExpiry = item.expiry ? Math.ceil((new Date(item.expiry) - new Date()) / (1000 * 60 * 60 * 24)) : null;
+                let expiryClass = '';
+                let expiryText = '';
+                
+                if (daysUntilExpiry !== null) {
+                    if (daysUntilExpiry < 0) {
+                        expiryClass = 'expiry-danger';
+                        expiryText = `Expired ${Math.abs(daysUntilExpiry)} days ago`;
+                    } else if (daysUntilExpiry <= 3) {
+                        expiryClass = 'expiry-danger';
+                        expiryText = `Expires in ${daysUntilExpiry} days`;
+                    } else if (daysUntilExpiry <= 7) {
+                        expiryClass = 'expiry-warning';
+                        expiryText = `Expires in ${daysUntilExpiry} days`;
+                    } else {
+                        expiryText = `Expires in ${daysUntilExpiry} days`;
+                    }
+                }
+                
+                return `
+                    <div class="ingredient-card bg-white p-4 rounded-lg shadow-sm ${expiryClass}">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-semibold text-gray-800 capitalize">${item.name}</h3>
+                                <p class="text-sm text-gray-600">Quantity: ${item.quantity}</p>
+                                ${expiryText ? `<p class="text-xs text-gray-500 mt-1">${expiryText}</p>` : ''}
+                            </div>
+                            <button onclick="removeIngredient(${item.id})" class="text-red-500 hover:text-red-700">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Recipe management
+        function displayRecipes(recipes = recipeDatabase) {
+            const container = document.getElementById('recipes-list');
+            if (recipes.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 col-span-full">
+                        <i class="fas fa-utensils text-6xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500">No recipes match your current filter.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = recipes.map(recipe => {
+                const inventoryIngredients = inventory.map(item => item.name);
+                const availableIngredients = recipe.ingredients.filter(ingredient => 
+                    inventoryIngredients.some(inv => inv.includes(ingredient.toLowerCase()) || ingredient.toLowerCase().includes(inv))
+                );
+                const canMake = availableIngredients.length === recipe.ingredients.length;
+                const missingCount = recipe.ingredients.length - availableIngredients.length;
+                
+                return `
+                    <div class="recipe-card bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-xl font-bold text-gray-800">${recipe.name}</h3>
+                            <span class="text-sm px-2 py-1 rounded-full ${canMake ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                                ${canMake ? 'Can Make' : `Missing ${missingCount}`}
+                            </span>
+                        </div>
+                        <div class="flex items-center space-x-4 text-sm text-gray-600 mb-4">
+                            <span><i class="fas fa-clock mr-1"></i>${recipe.time} min</span>
+                            <span><i class="fas fa-chart-bar mr-1"></i>${recipe.difficulty}</span>
+                            ${recipe.healthy ? '<span class="text-green-600"><i class="fas fa-leaf mr-1"></i>Healthy</span>' : ''}
+                        </div>
+                        <p class="text-sm text-gray-600 mb-4">
+                            <strong>Ingredients:</strong> ${recipe.ingredients.join(', ')}
+                        </p>
+                        <div class="flex space-x-2">
+                            <button onclick="showRecipeDetails(${recipe.id})" class="flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-all">
+                                View Recipe
+                            </button>
+                            ${!canMake ? `<button onclick="addMissingToGrocery(${recipe.id})" class="flex-1 bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition-all">
+                                Add Missing
+                            </button>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function filterRecipes() {
+            const filter = document.getElementById('recipe-filter').value;
+            let filteredRecipes = recipeDatabase;
+            
+            switch (filter) {
+                case 'available':
+                    filteredRecipes = recipeDatabase.filter(recipe => {
+                        const inventoryIngredients = inventory.map(item => item.name);
+                        const availableIngredients = recipe.ingredients.filter(ingredient => 
+                            inventoryIngredients.some(inv => inv.includes(ingredient.toLowerCase()) || ingredient.toLowerCase().includes(inv))
+                        );
+                        return availableIngredients.length === recipe.ingredients.length;
+                    });
+                    break;
+                case 'quick':
+                    filteredRecipes = recipeDatabase.filter(recipe => recipe.time <= 30);
+                    break;
+                case 'healthy':
+                    filteredRecipes = recipeDatabase.filter(recipe => recipe.healthy);
+                    break;
+            }
+            
+            displayRecipes(filteredRecipes);
+        }
+        
+        function suggestRecipesFromInventory() {
+            showTab('recipes');
+            const inventoryIngredients = inventory.map(item => item.name);
+            
+            if (inventoryIngredients.length === 0) {
+                alert('Add some ingredients to your inventory first!');
+                return;
+            }
+            
+            // Sort recipes by how many ingredients we have
+            const scoredRecipes = recipeDatabase.map(recipe => {
+                const matchCount = recipe.ingredients.filter(ingredient => 
+                    inventoryIngredients.some(inv => inv.includes(ingredient.toLowerCase()) || ingredient.toLowerCase().includes(inv))
+                ).length;
+                return { ...recipe, score: matchCount };
+            }).sort((a, b) => b.score - a.score);
+            
+            displayRecipes(scoredRecipes.slice(0, 6));
+        }
+        
+        function showRecipeDetails(recipeId) {
+            const recipe = recipeDatabase.find(r => r.id === recipeId);
+            document.getElementById('modal-recipe-title').textContent = recipe.name;
+            document.getElementById('modal-recipe-content').innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-4 text-sm text-gray-600">
+                        <span><i class="fas fa-clock mr-1"></i>${recipe.time} minutes</span>
+                        <span><i class="fas fa-chart-bar mr-1"></i>${recipe.difficulty}</span>
+                        ${recipe.healthy ? '<span class="text-green-600"><i class="fas fa-leaf mr-1"></i>Healthy</span>' : ''}
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-gray-800 mb-2">Ingredients:</h4>
+                        <ul class="list-disc pl-5 space-y-1">
+                            ${recipe.ingredients.map(ing => `<li class="text-sm">${ing}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-gray-800 mb-2">Instructions:</h4>
+                        <ol class="list-decimal pl-5 space-y-2">
+                            ${recipe.instructions.map(inst => `<li class="text-sm">${inst}</li>`).join('')}
+                        </ol>
+                    </div>
+                </div>
+            `;
+            document.getElementById('recipe-modal').classList.remove('hidden');
+        }
+        
+        function closeRecipeModal() {
+            document.getElementById('recipe-modal').classList.add('hidden');
+        }
+        
+        function addMissingToGrocery(recipeId) {
+            const recipe = recipeDatabase.find(r => r.id === recipeId);
+            const inventoryIngredients = inventory.map(item => item.name);
+            
+            const missingIngredients = recipe.ingredients.filter(ingredient => 
+                !inventoryIngredients.some(inv => inv.includes(ingredient.toLowerCase()) || ingredient.toLowerCase().includes(inv))
+            );
+            
+            missingIngredients.forEach(ingredient => {
+                if (!groceryList.find(item => item.name === ingredient)) {
+                    groceryList.push({
+                        id: Date.now() + Math.random(),
+                        name: ingredient,
+                        recipe: recipe.name,
+                        added: new Date().toISOString()
+                    });
+                }
+            });
+            
+            localStorage.setItem('groceryList', JSON.stringify(groceryList));
+            updateStats();
+            alert(`Added ${missingIngredients.length} missing ingredients to your grocery list!`);
+        }
+        
+        // Grocery list management
+        function displayGroceryList() {
+            const container = document.getElementById('grocery-items');
+            if (groceryList.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12">
+                        <i class="fas fa-shopping-bag text-6xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500">Your grocery list is empty. Items will be added automatically when you select recipes!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = groceryList.map(item => `
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
+                    <div>
+                        <h3 class="font-semibold text-gray-800 capitalize">${item.name}</h3>
+                        ${item.recipe ? `<p class="text-sm text-gray-500">For: ${item.recipe}</p>` : ''}
+                    </div>
+                    <button onclick="removeFromGrocery(${item.id})" class="text-red-500 hover:text-red-700">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+        
+        function removeFromGrocery(id) {
+            groceryList = groceryList.filter(item => item.id !== id);
+            localStorage.setItem('groceryList', JSON.stringify(groceryList));
+            displayGroceryList();
+            updateStats();
+        }
+        
+        function clearGroceryList() {
+            if (confirm('Are you sure you want to clear your entire grocery list?')) {
+                groceryList = [];
+                localStorage.setItem('groceryList', JSON.stringify(groceryList));
+                displayGroceryList();
+                updateStats();
+            }
+        }
+        
+        // Chat functionality
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            addChatMessage(message, 'user');
+            input.value = '';
+            
+            // Simulate AI response
+            setTimeout(() => {
+                const response = generateAIResponse(message);
+                addChatMessage(response, 'ai');
+            }, 1000);
+        }
+        
+        function quickMessage(message) {
+            document.getElementById('chat-input').value = message;
+            sendMessage();
+        }
+        
+        function addChatMessage(message, sender) {
+            const container = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-bubble-${sender} p-4 rounded-lg mb-4 max-w-xs slide-in ${sender === 'user' ? 'ml-auto' : ''}`;
+            messageDiv.innerHTML = `<p class="text-sm">${message}</p>`;
+            
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+            
+            // Save to chat history
+            chatHistory.push({ message, sender, timestamp: new Date().toISOString() });
+            localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+        }
+        
+        function loadChatHistory() {
+            const container = document.getElementById('chat-messages');
+            // Clear existing messages except the welcome message
+            const welcomeMessage = container.querySelector('.chat-bubble-ai');
+            container.innerHTML = '';
+            if (welcomeMessage) {
+                container.appendChild(welcomeMessage);
+            }
+            
+            chatHistory.forEach(chat => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `chat-bubble-${chat.sender} p-4 rounded-lg mb-4 max-w-xs ${chat.sender === 'user' ? 'ml-auto' : ''}`;
+                messageDiv.innerHTML = `<p class="text-sm">${chat.message}</p>`;
+                container.appendChild(messageDiv);
+            });
+            
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function generateAIResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            const inventoryIngredients = inventory.map(item => item.name);
+            
+            if (lowerMessage.includes('what should i cook') || lowerMessage.includes('dinner') || lowerMessage.includes('what to make')) {
+                if (inventoryIngredients.length === 0) {
+                    return "I'd love to help you decide what to cook! First, let me know what ingredients you have in your inventory. You can add them in the 'My Inventory' tab. 🍳";
+                }
+                
+                const suggestions = recipeDatabase.filter(recipe => {
+                    const matchCount = recipe.ingredients.filter(ingredient => 
+                        inventoryIngredients.some(inv => inv.includes(ingredient.toLowerCase()) || ingredient.toLowerCase().includes(inv))
+                    ).length;
+                    return matchCount >= recipe.ingredients.length * 0.5; // At least 50% match
+                }).slice(0, 3);
+                
+                if (suggestions.length > 0) {
+                    return `Based on your inventory, I suggest: ${suggestions.map(s => s.name).join(', ')}. Check the Recipes tab to see full details! 🍽️`;
+                } else {
+                    return "I see you have some ingredients, but I'd need a few more common items to suggest complete recipes. Try adding some basics like rice, eggs, or onions! 🥚";
+                }
+            }
+            
+            if (lowerMessage.includes('30 minutes') || lowerMessage.includes('quick') || lowerMessage.includes('fast')) {
+                const quickRecipes = recipeDatabase.filter(r => r.time <= 30);
+                return `Here are some quick recipes (≤30 min): ${quickRecipes.slice(0, 3).map(r => `${r.name} (${r.time} min)`).join(', ')}. Check the Recipes tab for details! ⚡`;
+            }
+            
+            if (lowerMessage.includes('healthy') || lowerMessage.includes('nutrition')) {
+                const healthyRecipes = recipeDatabase.filter(r => r.healthy);
+                return `For healthy options, try: ${healthyRecipes.map(r => r.name).join(', ')}. These recipes focus on nutritious ingredients! 🥗`;
+            }
+            
+            if (lowerMessage.includes('ingredient') && inventoryIngredients.length > 0) {
+                return `I see you have: ${inventoryIngredients.slice(0, 5).join(', ')}${inventoryIngredients.length > 5 ? '...' : ''}. Would you like recipe suggestions based on these ingredients? 📋`;
+            }
+            
+            if (lowerMessage.includes('expir') || lowerMessage.includes('waste')) {
+                const expiringItems = inventory.filter(item => {
+                    if (!item.expiry) return false;
+                    const daysUntilExpiry = Math.ceil((new Date(item.expiry) - new Date()) / (1000 * 60 * 60 * 24));
+                    return daysUntilExpiry <= 7;
+                });
+                
+                if (expiringItems.length > 0) {
+                    return `You have ${expiringItems.length} items expiring soon: ${expiringItems.map(i => i.name).join(', ')}. Let me suggest recipes using these ingredients! ⏰`;
+                } else {
+                    return "Great news! You don't have any ingredients expiring soon. Your inventory management is on point! ✅";
+                }
+            }
+            
+            // Default responses
+            const responses = [
+                "I'm here to help with all your cooking questions! Try asking about recipes, ingredients, or meal planning. 👨‍🍳",
+                "Let me know what you'd like to cook, and I'll help you find the perfect recipe based on your inventory! 🍴",
+                "I can suggest recipes, help manage your inventory, and create grocery lists. What would you like to start with? 🛍️",
+                "Ask me about cooking times, dietary preferences, or what to do with specific ingredients! 🥘"
+            ];
+            
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+        
+        // Utility functions
+        function updateStats() {
+            document.getElementById('inventory-count').textContent = inventory.length;
+            document.getElementById('grocery-count').textContent = groceryList.length;
+            
+            // Calculate available recipes
+            const availableRecipes = recipeDatabase.filter(recipe => {
+                const inventoryIngredients = inventory.map(item => item.name);
+                const availableIngredients = recipe.ingredients.filter(ingredient => 
+                    inventoryIngredients.some(inv => inv.includes(ingredient.toLowerCase()) || ingredient.toLowerCase().includes(inv))
+                );
+                return availableIngredients.length === recipe.ingredients.length;
+            });
+            
+            document.getElementById('recipe-count').textContent = availableRecipes.length;
+        }
+        
+        function updateExpiringItems() {
+            const container = document.getElementById('expiring-items');
+            
+            const expiringItems = inventory.filter(item => {
+                if (!item.expiry) return false;
+                const daysUntilExpiry = Math.ceil((new Date(item.expiry) - new Date()) / (1000 * 60 * 60 * 24));
+                return daysUntilExpiry <= 7;
+            }).sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
+            
+            if (expiringItems.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm">No items expiring soon</p>';
+                return;
+            }
+            
+            container.innerHTML = expiringItems.map(item => {
+                const daysUntilExpiry = Math.ceil((new Date(item.expiry) - new Date()) / (1000 * 60 * 60 * 24));
+                const isExpired = daysUntilExpiry < 0;
+                const urgentClass = daysUntilExpiry <= 3 ? 'text-red-600' : daysUntilExpiry <= 7 ? 'text-yellow-600' : 'text-gray-600';
+                
+                return `
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="capitalize">${item.name}</span>
+                        <span class="${urgentClass} font-medium">
+                            ${isExpired ? `Expired ${Math.abs(daysUntilExpiry)} days ago` : `${daysUntilExpiry} days`}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+        }
+    </script>
+</body>
+</html>
