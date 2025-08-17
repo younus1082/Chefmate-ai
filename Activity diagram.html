@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChefMate AI - Activity Diagrams and Database Design</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-green: #4ECDC4;
+            --dark-green: #45B7AA;
+            --warm-orange: #FF6B6B;
+            --bright-yellow: #FFD93D;
+            --light-green: #E8F8F5;
+            --dark-text: #2C3E50;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 100%);
+        }
+        
+        .flowchart-node {
+            background: white;
+            border: 2px solid var(--primary-green);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 8px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--dark-text);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .flowchart-start {
+            background: var(--primary-green);
+            color: white;
+            border-radius: 50px;
+        }
+        
+        .flowchart-end {
+            background: var(--warm-orange);
+            color: white;
+            border-radius: 50px;
+        }
+        
+        .flowchart-decision {
+            background: var(--bright-yellow);
+            color: var(--dark-text);
+            transform: rotate(45deg);
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+        }
+        
+        .flowchart-decision span {
+            transform: rotate(-45deg);
+            font-size: 12px;
+            line-height: 1.2;
+        }
+        
+        .flowchart-process {
+            background: var(--light-green);
+            border-color: var(--dark-green);
+        }
+        
+        .arrow-down {
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 16px solid var(--primary-green);
+            margin: 0 auto;
+        }
+        
+        .arrow-right {
+            width: 0;
+            height: 0;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-left: 16px solid var(--primary-green);
+            margin: auto 0;
+        }
+        
+        .db-table {
+            background: white;
+            border: 2px solid var(--primary-green);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .db-table-header {
+            background: var(--primary-green);
+            color: white;
+            padding: 12px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .db-field {
+            padding: 8px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .db-field:last-child {
+            border-bottom: none;
+        }
+        
+        .pk {
+            color: var(--warm-orange);
+            font-weight: bold;
+        }
+        
+        .fk {
+            color: var(--primary-green);
+            font-weight: bold;
+        }
+        
+        .relationship-line {
+            stroke: var(--primary-green);
+            stroke-width: 2;
+            fill: none;
+            marker-end: url(#arrowhead);
+        }
+        
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- Header -->
+    <header class="gradient-bg text-white p-6 shadow-lg">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex items-center space-x-4 mb-4">
+                <i class="fas fa-utensils text-3xl"></i>
+                <div>
+                    <h1 class="text-3xl font-bold">ChefMate AI</h1>
+                    <p class="text-lg opacity-90">System Design Documentation</p>
+                </div>
+            </div>
+            <div class="text-sm opacity-80">
+                <p>Activity Diagrams & Database Schema Design</p>
+                <p>Project Team: Alex Johnson (Lead), Maya Patel (UI/UX), Sam Rodriguez (Developer)</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        
+        <!-- Table of Contents -->
+        <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-list mr-3" style="color: var(--primary-green);"></i>
+                Table of Contents
+            </h2>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <h3 class="font-bold text-gray-700 mb-2">Activity Diagrams</h3>
+                    <ul class="space-y-1 text-sm">
+                        <li><a href="#user-registration" class="text-blue-600 hover:underline">1. User Registration & Authentication</a></li>
+                        <li><a href="#inventory-management" class="text-blue-600 hover:underline">2. Inventory Management</a></li>
+                        <li><a href="#recipe-discovery" class="text-blue-600 hover:underline">3. Recipe Discovery & Selection</a></li>
+                        <li><a href="#ai-chat" class="text-blue-600 hover:underline">4. AI Chat Interaction</a></li>
+                        <li><a href="#grocery-management" class="text-blue-600 hover:underline">5. Grocery List Management</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-bold text-gray-700 mb-2">Database Design</h3>
+                    <ul class="space-y-1 text-sm">
+                        <li><a href="#database-overview" class="text-blue-600 hover:underline">6. Database Overview</a></li>
+                        <li><a href="#entity-tables" class="text-blue-600 hover:underline">7. Entity Tables</a></li>
+                        <li><a href="#relationship-diagram" class="text-blue-600 hover:underline">8. Entity Relationship Diagram</a></li>
+                        <li><a href="#data-flow" class="text-blue-600 hover:underline">9. Data Flow Analysis</a></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- System Overview -->
+        <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-cogs mr-3" style="color: var(--primary-green);"></i>
+                System Overview
+            </h2>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="text-center p-4 bg-gray-50 rounded-lg">
+                    <i class="fas fa-users text-3xl mb-3" style="color: var(--primary-green);"></i>
+                    <h3 class="font-bold text-gray-800">User Management</h3>
+                    <p class="text-sm text-gray-600">Registration, authentication, and user preferences</p>
+                </div>
+                <div class="text-center p-4 bg-gray-50 rounded-lg">
+                    <i class="fas fa-boxes text-3xl mb-3" style="color: var(--warm-orange);"></i>
+                    <h3 class="font-bold text-gray-800">Inventory System</h3>
+                    <p class="text-sm text-gray-600">Ingredient tracking, expiry management, and consumption monitoring</p>
+                </div>
+                <div class="text-center p-4 bg-gray-50 rounded-lg">
+                    <i class="fas fa-robot text-3xl mb-3" style="color: var(--bright-yellow);"></i>
+                    <h3 class="font-bold text-gray-800">AI Assistant</h3>
+                    <p class="text-sm text-gray-600">Recipe suggestions, cooking guidance, and natural language processing</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Activity Diagrams Section -->
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">
+                <i class="fas fa-project-diagram mr-3" style="color: var(--primary-green);"></i>
+                Activity Diagrams
+            </h2>
+
+            <!-- User Registration Flow -->
+            <div id="user-registration" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-6">1. User Registration & Authentication Flow</h3>
+                <div class="flex flex-col items-center space-y-4">
+                    <div class="flowchart-node flowchart-start">Start: Open ChefMate AI</div>
+                    <div class="arrow-down"></div>
+                    <div class="flowchart-decision">
+                        <span>User Account Exists?</span>
+                    </div>
+                    <div class="flex justify-between w-full max-w-4xl">
+                        <div class="flex flex-col items-center space-y-4 w-1/2">
+                            <div class="text-sm font-bold text-gray-600">NO</div>
+                            <div class="flowchart-node flowchart-process">Display Registration Form</div>
+                            <div class="arrow-down"></div>
+                            <div class="flowchart-node flowchart-process">Validate User Input</div>
+                            <div class="arrow-down"></div>
+                            <div class="flowchart-node flowchart-process">Create User Account</div>
+                            <div class="arrow-down"></div>
+                            <div class="flowchart-node flowchart-process">Set Default Preferences</div>
+                        </div>
+                        <div class="flex flex-col items-center space-y-4 w-1/2">
+                            <div class="text-sm font-bold text-gray-600">YES</div>
+                            <div class="flowchart-node flowchart-process">Display Login Form</div>
+                            <div class="arrow-down"></div>
+                            <div class="flowchart-node flowchart-process">Authenticate Credentials</div>
+                            <div class="arrow-down"></div>
+                            <div class="flowchart-decision">
+                                <span>Valid Credentials?</span>
+                            </div>
+                            <div class="text-sm font-bold text-red-600">NO → Show Error</div>
+                        </div>
+                    </div>
+                    <div class="arrow-down"></div>
+                    <div class="flowchart-node flowchart-process">Load User Data & Preferences</div>
+                    <div class="arrow-down"></div>
+                    <div class="flowchart-node flowchart-end">End: Dashboard Loaded</div>
+                </div>
+            </div>
+
+            <!-- Inventory Management Flow -->
+            <div id="inventory-management" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-6">2. Inventory Management Flow</h3>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="flex flex-col items-center space-y-4">
+                        <h4 class="font-bold text-gray-700">Add Ingredient Process</h4>
+                        <div class="flowchart-node flowchart-start">Start: Add Ingredient</div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-node flowchart-process">Enter Ingredient Details</div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-node flowchart-process">Set Quantity & Expiry</div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-decision">
+                            <span>Valid Input?</span>
+                        </div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-node flowchart-process">Save to Database</div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-node flowchart-process">Update Inventory View</div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-node flowchart-end">End: Ingredient Added</div>
+                    </div>
+                    <div class="flex flex-col items-center space-y-4">
+                        <h4 class="font-bold text-gray-700">Expiry Tracking Process</h4>
+                        <div class="flowchart-node flowchart-start">Start: System Check</div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-node flowchart-process">Scan All Inventory Items</div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-node flowchart-process">Calculate Days to Expiry</div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-decision">
+                            <span>Expires Soon?</span>
+                        </div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-node flowchart-process">Generate Alert</div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-node flowchart-process">Suggest Recipes</div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-node flowchart-end">End: Alert Sent</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recipe Discovery Flow -->
+            <div id="recipe-discovery" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-6">3. Recipe Discovery & Selection Flow</h3>
+                <div class="flex flex-col items-center space-y-4">
+                    <div class="flowchart-node flowchart-start">Start: Browse Recipes</div>
+                    <div class="arrow-down"></div>
+                    <div class="flowchart-node flowchart-process">Access Recipe Database</div>
+                    <div class="arrow-down"></div>
+                    <div class="flowchart-node flowchart-process">Load User Inventory</div>
+                    <div class="arrow-down"></div>
+                    <div class="flowchart-node flowchart-process">Match Available Ingredients</div>
+                    <div class="arrow-down"></div>
+                    <div class="flowchart-decision">
+                        <span>Filter Applied?</span>
+                    </div>
+                    <div class="flex justify-between w-full max-w-3xl">
+                        <div class="flex flex-col items-center space-y-2">
+                            <div class="text-sm font-bold text-gray-600">YES</div>
+                            <div class="flowchart-node flowchart-process">Apply Filters<br/>(Quick/Healthy/Available)</div>
+                        </div>
+                        <div class="flex flex-col items-center space-y-2">
+                            <div class="text-sm font-bold text-gray-600">NO</div>
+                            <div class="flowchart-node flowchart-process">Show All Recipes</div>
+                        </div>
+                    </div>
+                    <div class="arrow-down"></div>
+                    <div class="flowchart-node flowchart-process">Display Recipe Cards</div>
+                    <div class="arrow-down"></div>
+                    <div class="flowchart-decision">
+                        <span>Recipe Selected?</span>
+                    </div>
+                    <div class="arrow-down"></div>
+                    <div class="flowchart-node flowchart-process">Show Recipe Details</div>
+                    <div class="arrow-down"></div>
+                    <div class="flowchart-decision">
+                        <span>Missing Ingredients?</span>
+                    </div>
+                    <div class="arrow-down"></div>
+                    <div class="flowchart-node flowchart-process">Add to Grocery List</div>
+                    <div class="arrow-down"></div>
+                    <div class="flowchart-node flowchart-end">End: Recipe Ready</div>
+                </div>
+            </div>
+
+            <!-- AI Chat Flow -->
+            <div id="ai-chat" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-6">4. AI Chat Interaction Flow</h3>
+                <div class="flex flex-col items-center space-y-4">
+                    <div class="flowchart-node flowchart-start">Start: User Message</div>
+                    <div class="arrow-down"></div>
+                    <div class="flowchart-node flowchart-process">Receive User Input</div>
+                    <div class="arrow-down"></div>
+                    <div class="flowchart-node flowchart-process">Analyze Message Context</div>
+                    <div class="arrow-down"></div>
+                    <div class="flowchart-decision">
+                        <span>Recipe Request?</span>
+                    </div>
+                    <div class="flex justify-between w-full max-w-4xl">
+                        <div class="flex flex-col items-center space-y-2 w-1/3">
+                            <div class="text-sm font-bold text-gray-600">YES</div>
+                            <div class="flowchart-node flowchart-process">Check Inventory</div>
+                            <div class="arrow-down"></div>
+                            <div class="flowchart-node flowchart-process">Suggest Recipes</div>
+                        </div>
+                        <div class="flex flex-col items-center space-y-2 w-1/3">
+                            <div class="text-sm font-bold text-gray-600">COOKING HELP</div>
+                            <div class="flowchart-node flowchart-process">Provide Cooking Tips</div>
+                            <div class="arrow-down"></div>
+                            <div class="flowchart-node flowchart-process">Step-by-step Guide</div>
+                        </div>
+                        <div class="flex flex-col items-center space-y-2 w-1/3">
+                            <div class="text-sm font-bold text-gray-600">GENERAL</div>
+                            <div class="flowchart-node flowchart-process">Generate Response</div>
+                            <div class="arrow-down"></div>
+                            <div class="flowchart-node flowchart-process">Provide Information</div>
+                        </div>
+                    </div>
+                    <div class="arrow-down"></div>
+                    <div class="flowchart-node flowchart-process">Format Response</div>
+                    <div class="arrow-down"></div>
+                    <div class="flowchart-node flowchart-process">Display to User</div>
+                    <div class="arrow-down"></div>
+                    <div class="flowchart-node flowchart-process">Save Chat History</div>
+                    <div class="arrow-down"></div>
+                    <div class="flowchart-node flowchart-end">End: Response Sent</div>
+                </div>
+            </div>
+
+            <!-- Grocery Management Flow -->
+            <div id="grocery-management" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-6">5. Grocery List Management Flow</h3>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="flex flex-col items-center space-y-4">
+                        <h4 class="font-bold text-gray-700">Auto-Generation Process</h4>
+                        <div class="flowchart-node flowchart-start">Start: Recipe Selected</div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-node flowchart-process">Get Recipe Ingredients</div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-node flowchart-process">Check User Inventory</div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-node flowchart-process">Identify Missing Items</div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-decision">
+                            <span>Missing Items?</span>
+                        </div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-node flowchart-process">Add to Grocery List</div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-node flowchart-process">Categorize Items</div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-node flowchart-end">End: List Updated</div>
+                    </div>
+                    <div class="flex flex-col items-center space-y-4">
+                        <h4 class="font-bold text-gray-700">Shopping Process</h4>
+                        <div class="flowchart-node flowchart-start">Start: Shopping Trip</div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-node flowchart-process">View Grocery List</div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-node flowchart-process">Purchase Items</div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-node flowchart-process">Mark Items as Bought</div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-decision">
+                            <span>Add to Inventory?</span>
+                        </div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-node flowchart-process">Update Inventory</div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-node flowchart-process">Remove from Grocery List</div>
+                        <div class="arrow-down"></div>
+                        <div class="flowchart-node flowchart-end">End: Shopping Complete</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Database Design Section -->
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">
+                <i class="fas fa-database mr-3" style="color: var(--primary-green);"></i>
+                Database Design
+            </h2>
+
+            <!-- Database Overview -->
+            <div id="database-overview" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-6">6. Database Overview</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-bold text-gray-700 mb-3">Design Principles</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Normalized database structure (3NF)</li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Referential integrity with foreign keys</li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Scalable design for future features</li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Optimized for common queries</li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>Data validation and constraints</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-gray-700 mb-3">Key Features</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li class="flex items-center"><i class="fas fa-users text-blue-500 mr-2"></i>Multi-user support with secure authentication</li>
+                            <li class="flex items-center"><i class="fas fa-boxes text-orange-500 mr-2"></i>Flexible inventory tracking system</li>
+                            <li class="flex items-center"><i class="fas fa-utensils text-green-500 mr-2"></i>Rich recipe database with metadata</li>
+                            <li class="flex items-center"><i class="fas fa-comments text-purple-500 mr-2"></i>Chat history and AI interaction logging</li>
+                            <li class="flex items-center"><i class="fas fa-shopping-cart text-yellow-500 mr-2"></i>Dynamic grocery list management</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Entity Tables -->
+            <div id="entity-tables" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-6">7. Database Entity Tables</h3>
+                
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <!-- Users Table -->
+                    <div class="db-table">
+                        <div class="db-table-header">
+                            <i class="fas fa-users mr-2"></i>Users
+                        </div>
+                        <div class="db-field">
+                            <span class="pk">user_id (PK)</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span>email</span>
+                            <span>VARCHAR(255)</span>
+                        </div>
+                        <div class="db-field">
+                            <span>password_hash</span>
+                            <span>VARCHAR(255)</span>
+                        </div>
+                        <div class="db-field">
+                            <span>first_name</span>
+                            <span>VARCHAR(100)</span>
+                        </div>
+                        <div class="db-field">
+                            <span>last_name</span>
+                            <span>VARCHAR(100)</span>
+                        </div>
+                        <div class="db-field">
+                            <span>created_at</span>
+                            <span>TIMESTAMP</span>
+                        </div>
+                        <div class="db-field">
+                            <span>updated_at</span>
+                            <span>TIMESTAMP</span>
+                        </div>
+                        <div class="db-field">
+                            <span>is_active</span>
+                            <span>BOOLEAN</span>
+                        </div>
+                    </div>
+
+                    <!-- User Preferences Table -->
+                    <div class="db-table">
+                        <div class="db-table-header">
+                            <i class="fas fa-cog mr-2"></i>User_Preferences
+                        </div>
+                        <div class="db-field">
+                            <span class="pk">preference_id (PK)</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span class="fk">user_id (FK)</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span>dietary_restrictions</span>
+                            <span>JSON</span>
+                        </div>
+                        <div class="db-field">
+                            <span>favorite_cuisines</span>
+                            <span>JSON</span>
+                        </div>
+                        <div class="db-field">
+                            <span>skill_level</span>
+                            <span>ENUM</span>
+                        </div>
+                        <div class="db-field">
+                            <span>time_preference</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span>health_focus</span>
+                            <span>BOOLEAN</span>
+                        </div>
+                    </div>
+
+                    <!-- Ingredients Master Table -->
+                    <div class="db-table">
+                        <div class="db-table-header">
+                            <i class="fas fa-leaf mr-2"></i>Ingredients_Master
+                        </div>
+                        <div class="db-field">
+                            <span class="pk">ingredient_id (PK)</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span>name</span>
+                            <span>VARCHAR(255)</span>
+                        </div>
+                        <div class="db-field">
+                            <span>category</span>
+                            <span>VARCHAR(100)</span>
+                        </div>
+                        <div class="db-field">
+                            <span>unit</span>
+                            <span>VARCHAR(50)</span>
+                        </div>
+                        <div class="db-field">
+                            <span>avg_shelf_life</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span>nutrition_per_100g</span>
+                            <span>JSON</span>
+                        </div>
+                        <div class="db-field">
+                            <span>storage_tips</span>
+                            <span>TEXT</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <!-- User Inventory Table -->
+                    <div class="db-table">
+                        <div class="db-table-header">
+                            <i class="fas fa-boxes mr-2"></i>User_Inventory
+                        </div>
+                        <div class="db-field">
+                            <span class="pk">inventory_id (PK)</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span class="fk">user_id (FK)</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span class="fk">ingredient_id (FK)</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span>quantity</span>
+                            <span>DECIMAL(10,2)</span>
+                        </div>
+                        <div class="db-field">
+                            <span>purchase_date</span>
+                            <span>DATE</span>
+                        </div>
+                        <div class="db-field">
+                            <span>expiry_date</span>
+                            <span>DATE</span>
+                        </div>
+                        <div class="db-field">
+                            <span>location</span>
+                            <span>VARCHAR(100)</span>
+                        </div>
+                        <div class="db-field">
+                            <span>notes</span>
+                            <span>TEXT</span>
+                        </div>
+                    </div>
+
+                    <!-- Recipes Table -->
+                    <div class="db-table">
+                        <div class="db-table-header">
+                            <i class="fas fa-utensils mr-2"></i>Recipes
+                        </div>
+                        <div class="db-field">
+                            <span class="pk">recipe_id (PK)</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span>name</span>
+                            <span>VARCHAR(255)</span>
+                        </div>
+                        <div class="db-field">
+                            <span>description</span>
+                            <span>TEXT</span>
+                        </div>
+                        <div class="db-field">
+                            <span>instructions</span>
+                            <span>JSON</span>
+                        </div>
+                        <div class="db-field">
+                            <span>prep_time</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span>cook_time</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span>difficulty_level</span>
+                            <span>ENUM</span>
+                        </div>
+                        <div class="db-field">
+                            <span>cuisine_type</span>
+                            <span>VARCHAR(100)</span>
+                        </div>
+                        <div class="db-field">
+                            <span>servings</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span>is_healthy</span>
+                            <span>BOOLEAN</span>
+                        </div>
+                        <div class="db-field">
+                            <span>created_at</span>
+                            <span>TIMESTAMP</span>
+                        </div>
+                    </div>
+
+                    <!-- Recipe Ingredients Table -->
+                    <div class="db-table">
+                        <div class="db-table-header">
+                            <i class="fas fa-list mr-2"></i>Recipe_Ingredients
+                        </div>
+                        <div class="db-field">
+                            <span class="pk">recipe_ingredient_id (PK)</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span class="fk">recipe_id (FK)</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span class="fk">ingredient_id (FK)</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span>quantity</span>
+                            <span>DECIMAL(10,2)</span>
+                        </div>
+                        <div class="db-field">
+                            <span>unit</span>
+                            <span>VARCHAR(50)</span>
+                        </div>
+                        <div class="db-field">
+                            <span>preparation</span>
+                            <span>VARCHAR(255)</span>
+                        </div>
+                        <div class="db-field">
+                            <span>is_optional</span>
+                            <span>BOOLEAN</span>
+                        </div>
+                        <div class="db-field">
+                            <span>substitute_options</span>
+                            <span>JSON</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Grocery Lists Table -->
+                    <div class="db-table">
+                        <div class="db-table-header">
+                            <i class="fas fa-shopping-cart mr-2"></i>Grocery_Lists
+                        </div>
+                        <div class="db-field">
+                            <span class="pk">grocery_item_id (PK)</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span class="fk">user_id (FK)</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span class="fk">ingredient_id (FK)</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span>quantity</span>
+                            <span>DECIMAL(10,2)</span>
+                        </div>
+                        <div class="db-field">
+                            <span>source_recipe_id</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span>is_purchased</span>
+                            <span>BOOLEAN</span>
+                        </div>
+                        <div class="db-field">
+                            <span>added_at</span>
+                            <span>TIMESTAMP</span>
+                        </div>
+                        <div class="db-field">
+                            <span>priority</span>
+                            <span>ENUM</span>
+                        </div>
+                    </div>
+
+                    <!-- Chat History Table -->
+                    <div class="db-table">
+                        <div class="db-table-header">
+                            <i class="fas fa-comments mr-2"></i>Chat_History
+                        </div>
+                        <div class="db-field">
+                            <span class="pk">chat_id (PK)</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span class="fk">user_id (FK)</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span>session_id</span>
+                            <span>VARCHAR(255)</span>
+                        </div>
+                        <div class="db-field">
+                            <span>message_type</span>
+                            <span>ENUM</span>
+                        </div>
+                        <div class="db-field">
+                            <span>message_content</span>
+                            <span>TEXT</span>
+                        </div>
+                        <div class="db-field">
+                            <span>ai_response</span>
+                            <span>TEXT</span>
+                        </div>
+                        <div class="db-field">
+                            <span>context_data</span>
+                            <span>JSON</span>
+                        </div>
+                        <div class="db-field">
+                            <span>created_at</span>
+                            <span>TIMESTAMP</span>
+                        </div>
+                    </div>
+
+                    <!-- User Recipe History Table -->
+                    <div class="db-table">
+                        <div class="db-table-header">
+                            <i class="fas fa-history mr-2"></i>User_Recipe_History
+                        </div>
+                        <div class="db-field">
+                            <span class="pk">history_id (PK)</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span class="fk">user_id (FK)</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span class="fk">recipe_id (FK)</span>
+                            <span>INT</span>
+                        </div>
+                        <div class="db-field">
+                            <span>cooked_at</span>
+                            <span>TIMESTAMP</span>
+                        </div>
+                        <div class="db-field">
+                            <span>rating</span>
+                            <span>DECIMAL(2,1)</span>
+                        </div>
+                        <div class="db-field">
+                            <span>review</span>
+                            <span>TEXT</span>
+                        </div>
+                        <div class="db-field">
+                            <span>modifications</span>
+                            <span>JSON</span>
+                        </div>
+                        <div class="db-field">
+                            <span>would_make_again</span>
+                            <span>BOOLEAN</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Entity Relationship Diagram -->
+            <div id="relationship-diagram" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-6">8. Entity Relationship Diagram</h3>
+                
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <svg width="100%" height="600" viewBox="0 0 1000 600" class="border rounded">
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="var(--primary-green)" />
+                            </marker>
+                        </defs>
+                        
+                        <!-- Users Entity -->
+                        <rect x="50" y="50" width="120" height="80" fill="white" stroke="var(--primary-green)" stroke-width="2" rx="5"/>
+                        <text x="110" y="75" text-anchor="middle" font-weight="bold" fill="var(--dark-text)">Users</text>
+                        <text x="60" y="95" font-size="12" fill="var(--dark-text)">• user_id (PK)</text>
+                        <text x="60" y="110" font-size="12" fill="var(--dark-text)">• email</text>
+                        <text x="60" y="125" font-size="12" fill="var(--dark-text)">• password_hash</text>
+                        
+                        <!-- User Preferences Entity -->
+                        <rect x="250" y="50" width="120" height="80" fill="white" stroke="var(--primary-green)" stroke-width="2" rx="5"/>
+                        <text x="310" y="75" text-anchor="middle" font-weight="bold" fill="var(--dark-text)">User_Preferences</text>
+                        <text x="260" y="95" font-size="12" fill="var(--dark-text)">• preference_id (PK)</text>
+                        <text x="260" y="110" font-size="12" fill="var(--fk)">• user_id (FK)</text>
+                        <text x="260" y="125" font-size="12" fill="var(--dark-text)">• dietary_restrictions</text>
+                        
+                        <!-- User Inventory Entity -->
+                        <rect x="50" y="200" width="120" height="80" fill="white" stroke="var(--primary-green)" stroke-width="2" rx="5"/>
+                        <text x="110" y="225" text-anchor="middle" font-weight="bold" fill="var(--dark-text)">User_Inventory</text>
+                        <text x="60" y="245" font-size="12" fill="var(--dark-text)">• inventory_id (PK)</text>
+                        <text x="60" y="260" font-size="12" fill="var(--fk)">• user_id (FK)</text>
+                        <text x="60" y="275" font-size="12" fill="var(--fk)">• ingredient_id (FK)</text>
+                        
+                        <!-- Ingredients Master Entity -->
+                        <rect x="250" y="200" width="120" height="80" fill="white" stroke="var(--primary-green)" stroke-width="2" rx="5"/>
+                        <text x="310" y="225" text-anchor="middle" font-weight="bold" fill="var(--dark-text)">Ingredients_Master</text>
+                        <text x="260" y="245" font-size="12" fill="var(--dark-text)">• ingredient_id (PK)</text>
+                        <text x="260" y="260" font-size="12" fill="var(--dark-text)">• name</text>
+                        <text x="260" y="275" font-size="12" fill="var(--dark-text)">• category</text>
+                        
+                        <!-- Recipes Entity -->
+                        <rect x="450" y="50" width="120" height="80" fill="white" stroke="var(--primary-green)" stroke-width="2" rx="5"/>
+                        <text x="510" y="75" text-anchor="middle" font-weight="bold" fill="var(--dark-text)">Recipes</text>
+                        <text x="460" y="95" font-size="12" fill="var(--dark-text)">• recipe_id (PK)</text>
+                        <text x="460" y="110" font-size="12" fill="var(--dark-text)">• name</text>
+                        <text x="460" y="125" font-size="12" fill="var(--dark-text)">• instructions</text>
+                        
+                        <!-- Recipe Ingredients Entity -->
+                        <rect x="450" y="200" width="120" height="80" fill="white" stroke="var(--primary-green)" stroke-width="2" rx="5"/>
+                        <text x="510" y="225" text-anchor="middle" font-weight="bold" fill="var(--dark-text)">Recipe_Ingredients</text>
+                        <text x="460" y="245" font-size="12" fill="var(--dark-text)">• recipe_ingredient_id (PK)</text>
+                        <text x="460" y="260" font-size="12" fill="var(--fk)">• recipe_id (FK)</text>
+                        <text x="460" y="275" font-size="12" fill="var(--fk)">• ingredient_id (FK)</text>
+                        
+                        <!-- Grocery Lists Entity -->
+                        <rect x="50" y="350" width="120" height="80" fill="white" stroke="var(--primary-green)" stroke-width="2" rx="5"/>
+                        <text x="110" y="375" text-anchor="middle" font-weight="bold" fill="var(--dark-text)">Grocery_Lists</text>
+                        <text x="60" y="395" font-size="12" fill="var(--dark-text)">• grocery_item_id (PK)</text>
+                        <text x="60" y="410" font-size="12" fill="var(--fk)">• user_id (FK)</text>
+                        <text x="60" y="425" font-size="12" fill="var(--fk)">• ingredient_id (FK)</text>
+                        
+                        <!-- Chat History Entity -->
+                        <rect x="250" y="350" width="120" height="80" fill="white" stroke="var(--primary-green)" stroke-width="2" rx="5"/>
+                        <text x="310" y="375" text-anchor="middle" font-weight="bold" fill="var(--dark-text)">Chat_History</text>
+                        <text x="260" y="395" font-size="12" fill="var(--dark-text)">• chat_id (PK)</text>
+                        <text x="260" y="410" font-size="12" fill="var(--fk)">• user_id (FK)</text>
+                        <text x="260" y="425" font-size="12" fill="var(--dark-text)">• message_content</text>
+                        
+                        <!-- User Recipe History Entity -->
+                        <rect x="450" y="350" width="120" height="80" fill="white" stroke="var(--primary-green)" stroke-width="2" rx="5"/>
+                        <text x="510" y="375" text-anchor="middle" font-weight="bold" fill="var(--dark-text)">User_Recipe_History</text>
+                        <text x="460" y="395" font-size="12" fill="var(--dark-text)">• history_id (PK)</text>
+                        <text x="460" y="410" font-size="12" fill="var(--fk)">• user_id (FK)</text>
+                        <text x="460" y="425" font-size="12" fill="var(--fk)">• recipe_id (FK)</text>
+                        
+                        <!-- Relationships -->
+                        <line x1="170" y1="90" x2="250" y2="90" class="relationship-line"/>
+                        <line x1="110" y1="130" x2="110" y2="200" class="relationship-line"/>
+                        <line x1="170" y1="240" x2="250" y2="240" class="relationship-line"/>
+                        <line x1="370" y1="240" x2="450" y2="240" class="relationship-line"/>
+                        <line x1="510" y1="130" x2="510" y2="200" class="relationship-line"/>
+                        <line x1="110" y1="280" x2="110" y2="350" class="relationship-line"/>
+                        <line x1="170" y1="390" x2="250" y2="390" class="relationship-line"/>
+                        <line x1="370" y1="390" x2="450" y2="390" class="relationship-line"/>
+                        <line x1="310" y1="280" x2="310" y2="350" class="relationship-line"/>
+                        
+                        <!-- Relationship Labels -->
+                        <text x="210" y="85" font-size="10" fill="var(--dark-text)">1:1</text>
+                        <text x="125" y="170" font-size="10" fill="var(--dark-text)">1:M</text>
+                        <text x="210" y="235" font-size="10" fill="var(--dark-text)">M:1</text>
+                        <text x="410" y="235" font-size="10" fill="var(--dark-text)">M:1</text>
+                        <text x="525" y="170" font-size="10" fill="var(--dark-text)">1:M</text>
+                        <text x="125" y="320" font-size="10" fill="var(--dark-text)">1:M</text>
+                        <text x="210" y="385" font-size="10" fill="var(--dark-text)">M:1</text>
+                        <text x="410" y="385" font-size="10" fill="var(--dark-text)">M:1</text>
+                    </svg>
+                </div>
+                
+                <div class="mt-6 grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-bold text-gray-700 mb-3">Key Relationships</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li><strong>Users ↔ User_Preferences:</strong> One-to-one relationship for personalized settings</li>
+                            <li><strong>Users ↔ User_Inventory:</strong> One-to-many relationship for user's ingredients</li>
+                            <li><strong>Users ↔ Chat_History:</strong> One-to-many relationship for AI interactions</li>
+                            <li><strong>Users ↔ Grocery_Lists:</strong> One-to-many relationship for shopping items</li>
+                            <li><strong>Recipes ↔ Recipe_Ingredients:</strong> One-to-many for recipe composition</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-gray-700 mb-3">Data Integrity</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li><strong>Foreign Key Constraints:</strong> Ensure referential integrity across tables</li>
+                            <li><strong>Cascade Operations:</strong> Handle user deletion and related data cleanup</li>
+                            <li><strong>Check Constraints:</strong> Validate data ranges and formats</li>
+                            <li><strong>Unique Constraints:</strong> Prevent duplicate entries where needed</li>
+                            <li><strong>Index Optimization:</strong> Efficient queries on frequently accessed data</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Flow Analysis -->
+            <div id="data-flow" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-6">9. Data Flow Analysis</h3>
+                
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="space-y-4">
+                        <h4 class="font-bold text-gray-700">Recipe Suggestion Data Flow</h4>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="flex items-center space-x-4 mb-2">
+                                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">1</div>
+                                <span class="text-sm">User requests recipe suggestions</span>
+                            </div>
+                            <div class="flex items-center space-x-4 mb-2">
+                                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">2</div>
+                                <span class="text-sm">Query user inventory from User_Inventory table</span>
+                            </div>
+                            <div class="flex items-center space-x-4 mb-2">
+                                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">3</div>
+                                <span class="text-sm">Match ingredients with Recipe_Ingredients</span>
+                            </div>
+                            <div class="flex items-center space-x-4 mb-2">
+                                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">4</div>
+                                <span class="text-sm">Retrieve matching recipes from Recipes table</span>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">5</div>
+                                <span class="text-sm">Apply user preferences and return results</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <h4 class="font-bold text-gray-700">Inventory Management Data Flow</h4>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="flex items-center space-x-4 mb-2">
+                                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">1</div>
+                                <span class="text-sm">User adds ingredient to inventory</span>
+                            </div>
+                            <div class="flex items-center space-x-4 mb-2">
+                                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">2</div>
+                                <span class="text-sm">Validate against Ingredients_Master</span>
+                            </div>
+                            <div class="flex items-center space-x-4 mb-2">
+                                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">3</div>
+                                <span class="text-sm">Insert/update User_Inventory record</span>
+                            </div>
+                            <div class="flex items-center space-x-4 mb-2">
+                                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">4</div>
+                                <span class="text-sm">Calculate expiry alerts for dashboard</span>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">5</div>
+                                <span class="text-sm">Update recipe availability status</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h4 class="font-bold text-gray-700 mb-4">System Performance Considerations</h4>
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h5 class="font-bold text-blue-800 mb-2">Query Optimization</h5>
+                            <ul class="text-sm text-blue-700 space-y-1">
+                                <li>• Index on user_id for fast user data retrieval</li>
+                                <li>• Composite index on (ingredient_id, recipe_id)</li>
+                                <li>• Full-text search on recipe names and descriptions</li>
+                                <li>• Materialized views for complex aggregations</li>
+                            </ul>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h5 class="font-bold text-green-800 mb-2">Data Caching Strategy</h5>
+                            <ul class="text-sm text-green-700 space-y-1">
+                                <li>• Cache frequently accessed recipes</li>
+                                <li>• Session-based inventory caching</li>
+                                <li>• Redis for real-time chat responses</li>
+                                <li>• CDN for recipe images and media</li>
+                            </ul>
+                        </div>
+                        <div class="bg-orange-50 p-4 rounded-lg">
+                            <h5 class="font-bold text-orange-800 mb-2">Scalability Features</h5>
+                            <ul class="text-sm text-orange-700 space-y-1">
+                                <li>• Database partitioning by user_id</li>
+                                <li>• Read replicas for recipe queries</li>
+                                <li>• Asynchronous processing for AI responses</li>
+                                <li>• Auto-scaling based on user load</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Implementation Guidelines -->
+        <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                <i class="fas fa-tools mr-3" style="color: var(--primary-green);"></i>
+                Implementation Guidelines
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-700 mb-4">Database Setup & Configuration</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="bg-gray-50 p-3 rounded">
+                            <strong>Primary Database:</strong> PostgreSQL 13+ for ACID compliance and JSON support
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <strong>Caching Layer:</strong> Redis for session management and temporary data
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <strong>Search Engine:</strong> Elasticsearch for recipe and ingredient search
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <strong>File Storage:</strong> AWS S3 for recipe images and user-generated content
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-bold text-gray-700 mb-4">Security & Data Protection</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="bg-gray-50 p-3 rounded">
+                            <strong>Authentication:</strong> JWT tokens with refresh mechanism
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <strong>Password Security:</strong> bcrypt hashing with salt rounds
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <strong>Data Encryption:</strong> AES-256 for sensitive user information
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <strong>API Security:</strong> Rate limiting and request validation
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <h3 class="text-lg font-bold text-gray-700 mb-4">Deployment & Monitoring</h3>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="space-y-2 text-sm">
+                        <h4 class="font-semibold text-gray-600">Development Environment</h4>
+                        <ul class="space-y-1">
+                            <li>• Docker containers for consistent development</li>
+                            <li>• Local PostgreSQL with seed data</li>
+                            <li>• Hot reloading for rapid iteration</li>
+                            <li>• Automated testing pipeline</li>
+                        </ul>
+                    </div>
+                    <div class="space-y-2 text-sm">
+                        <h4 class="font-semibold text-gray-600">Production Deployment</h4>
+                        <ul class="space-y-1">
+                            <li>• Kubernetes orchestration</li>
+                            <li>• Load balancing and auto-scaling</li>
+                            <li>• Database connection pooling</li>
+                            <li>• CDN for static asset delivery</li>
+                        </ul>
+                    </div>
+                    <div class="space-y-2 text-sm">
+                        <h4 class="font-semibold text-gray-600">Monitoring & Analytics</h4>
+                        <ul class="space-y-1">
+                            <li>• Application performance monitoring</li>
+                            <li>• Database query analysis</li>
+                            <li>• User behavior tracking</li>
+                            <li>• Error logging and alerting</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Conclusion -->
+        <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                <i class="fas fa-flag-checkered mr-3" style="color: var(--primary-green);"></i>
+                Conclusion
+            </h2>
+            <div class="space-y-4">
+                <p class="text-gray-700">
+                    The ChefMate AI system design provides a comprehensive foundation for building a scalable, user-friendly cooking assistant. The activity diagrams clearly outline user workflows and system processes, ensuring smooth interactions across all features including inventory management, recipe discovery, AI chat assistance, and grocery list automation.
+                </p>
+                <p class="text-gray-700">
+                    The database schema is designed with normalization principles, ensuring data integrity while supporting complex relationships between users, recipes, ingredients, and interactions. The modular structure allows for future enhancements such as meal planning, nutritional analysis, and social features.
+                </p>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="font-bold text-gray-800 mb-2">Key Success Factors:</h3>
+                    <ul class="space-y-1 text-sm text-gray-700">
+                        <li>• <strong>User-Centric Design:</strong> Activity diagrams focus on intuitive user experiences</li>
+                        <li>• <strong>Scalable Architecture:</strong> Database design supports growth and new features</li>
+                        <li>• <strong>Data-Driven Intelligence:</strong> Comprehensive data collection enables AI improvements</li>
+                        <li>• <strong>Performance Optimization:</strong> Strategic indexing and caching for responsive interactions</li>
+                        <li>• <strong>Security First:</strong> Built-in data protection and user privacy measures</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="gradient-bg text-white p-4 text-center mt-8">
+        <p class="text-sm opacity-90">© 2025 ChefMate AI - System Design Documentation</p>
+        <p class="text-xs opacity-75 mt-1">Generated for comprehensive system planning and development guidance</p>
+    </footer>
+</body>
+</html>
